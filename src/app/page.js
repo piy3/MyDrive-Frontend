@@ -1,7 +1,6 @@
 "use client";
 import { login } from "@/api/request";
-import { ModeToggle } from "@/components/ui/ModeToggle";
-import ParticlesBackground from "@/components/ui/ParticlesBackground";
+import  ModeToggle  from "@/components/ui/ModeToggle";
 import { useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
 import toast from "react-hot-toast";

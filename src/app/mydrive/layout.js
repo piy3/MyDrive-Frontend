@@ -1,4 +1,4 @@
-// app/mydrive/layout.tsx
+// app/mydrive/layout.js
 
 import MyDriveHeader from "@/components/ui/MyDriveHeader";
 import SidebarMenu from "@/components/ui/SidebarMenu"

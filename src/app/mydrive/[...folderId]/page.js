@@ -2,7 +2,6 @@
 
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { Folder, FileText, ImageIcon } from 'lucide-react';
 import Folders_files from '@/components/ui/folder_file';
 
 const FolderPage = () => {
