@@ -1,6 +1,6 @@
 "use client";
-import { login } from "@/api/request";
-import  ModeToggle  from "@/components/ui/ModeToggle";
+import { login, registerUser } from "@/api/request";
+import ModeToggle from "@/components/ui/ModeToggle";
 import { useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
 import toast from "react-hot-toast";
@@ -41,7 +41,7 @@ const Home = () => {
     setLoading(true);
     try {
       const response = await login({ email, password });
-      console.log(response)
+      console.log(response);
       if (response?.data?.success) {
         toast.success("Login Successfull");
         if (window !== undefined) {
@@ -50,36 +50,45 @@ const Home = () => {
           // setUser({full_name:response?.data?.full_name, email:response?.data?.email});
           router.push(`/mydrive`);
         }
-      } 
+      }
     } catch (err) {
       toast.error(err.response?.data?.message);
-      console.log(err);
+      // console.log(err);
     }
     setLoading(false);
   };
 
   // Function to handle signup form submission
-  const handleSignupSubmit = (event) => {
+  const handleSignupSubmit = async (event) => {
     event.preventDefault();
-    console.log("Sign Up form submitted!");
-    // In a real application, you would send this data to your backend for user registration
-    const name = event.target.signupName.value;
+
+    const fullname = event.target.signupName.value;
     const email = event.target.signupEmail.value;
     const password = event.target.signupPassword.value;
     const confirmPassword = event.target.confirmPassword.value;
 
     if (password !== confirmPassword) {
       console.error("Passwords do not match!");
-      // Display an error message to the user using the custom modal
       showCustomAlert("Passwords do not match!");
       return;
     }
 
-    console.log("Sign Up Name:", name);
-    console.log("Sign Up Email:", email);
-    console.log("Sign Up Password:", password);
-    // For demonstration:
-    // showCustomAlert('Sign Up attempt processed. (Check console)');
+    setLoading(true);
+    try {
+      const res = await registerUser({
+        fullname,
+        email,
+        password,
+      });
+      toast.success("Signup Successful! Please login.");
+      setActiveForm("login"); // Switch to login form after successful signup
+      
+    } catch (err) {
+      console.log(err)
+      toast.error(err.response?.data?.message)
+    }
+
+    setLoading(false);
   };
 
   // Function to show the custom alert modal

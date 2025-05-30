@@ -36,8 +36,9 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response) {
+      console.log(error)
       if (error.response.status === 404) {
-        console.error("404 Not Found:", error.response.data?.error);
+        console.error("404 Not Found:", error);
       }
 
       if (error.response.status === 401) {
