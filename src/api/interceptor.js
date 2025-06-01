@@ -27,7 +27,7 @@ api.interceptors.response.use(
       if (error.response.status === 401) {
         // Optional: Redirect to login or show a modal
         if (typeof window !== 'undefined') {
-          window.location.href = "/login"; // or show logout message
+          window.location.href = "/"; // or show logout message
         }
       }
     }

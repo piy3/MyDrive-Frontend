@@ -44,10 +44,12 @@ const Home = () => {
       console.log(response);
       if (response?.data?.success) {
         toast.success("Login Successfull");
+
         router.push(`/mydrive`);
       }
     } catch (err) {
       toast.error(err.response?.data?.message);
+      // console.log(err);
     }
     setLoading(false);
   };
@@ -96,6 +98,10 @@ const Home = () => {
     setShowAlertModal(false);
     setAlertMessage("");
   };
+
+  useEffect(()=>{
+    router.push('/mydrive')
+  },[])
 
   return (
     <>
