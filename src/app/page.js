@@ -44,16 +44,10 @@ const Home = () => {
       console.log(response);
       if (response?.data?.success) {
         toast.success("Login Successfull");
-        if (window !== undefined) {
-          localStorage.setItem("accessToken", response?.data?.accessToken);
-          localStorage.setItem("refreshToken", response?.data?.refreshToken);
-          // setUser({full_name:response?.data?.full_name, email:response?.data?.email});
-          router.push(`/mydrive`);
-        }
+        router.push(`/mydrive`);
       }
     } catch (err) {
       toast.error(err.response?.data?.message);
-      // console.log(err);
     }
     setLoading(false);
   };
