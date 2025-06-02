@@ -1,6 +1,7 @@
 "use client";
 import { login, registerUser } from "@/api/request";
 import ModeToggle from "@/components/ui/ModeToggle";
+import { useGlobalStore } from "@/store/useGlobalStore";
 import { useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
 import toast from "react-hot-toast";
@@ -17,6 +18,9 @@ const Home = () => {
   const [showAlertModal, setShowAlertModal] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const setUserInfo = useGlobalStore(
+    (store)=>store.setUserInfo
+  )
   const router = useRouter();
 
   // Effect to apply dark mode class to the HTML element
@@ -38,18 +42,21 @@ const Home = () => {
     e.preventDefault();
     const email = e.target.loginEmail.value;
     const password = e.target.loginPassword.value;
+    const rememberMe = e.target.rememberMe.checked; 
     setLoading(true);
     try {
       const response = await login({ email, password });
       console.log(response);
       if (response?.data?.success) {
         toast.success("Login Successfull");
-
+        console.log("res_user: ",response.data.user)
+        setUserInfo(response.data?.user);
         router.push(`/mydrive`);
       }
     } catch (err) {
+     
       toast.error(err.response?.data?.message);
-      // console.log(err);
+      console.log(err);
     }
     setLoading(false);
   };
@@ -99,9 +106,7 @@ const Home = () => {
     setAlertMessage("");
   };
 
-  useEffect(()=>{
-    router.push('/mydrive')
-  },[])
+
 
   return (
     <>

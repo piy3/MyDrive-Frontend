@@ -23,7 +23,6 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
-
 import {
   Drawer,
   DrawerTrigger,
@@ -35,8 +34,9 @@ import {
   DrawerClose,
 } from '@/components/ui/drawer';
 import { useGlobalStore } from '@/store/useGlobalStore';
-import { createFolder } from '@/api/request';
+import { createFolder, logoutUser } from '@/api/request';
 import toast from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
 
 const navItems = [
   { label: 'My Drive', icon: <Home size={20} /> },
@@ -52,8 +52,10 @@ const SidebarMenu = () => {
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [folderName,setfolderName] = useState("");
-  const currentFolderId = useGlobalStore((store)=>store.currentFolderId);
+  const [folderName, setFolderName] = useState("");
+  const currentFolderId = useGlobalStore((store) => store.currentFolderId);
+  const router  = useRouter();
+
   const handleMouseEnter = () => {
     if (!dropdownOpen) setIsCollapsed(false);
   };
@@ -62,35 +64,44 @@ const SidebarMenu = () => {
     if (!dropdownOpen) setIsCollapsed(true);
   };
 
-  const handleCreateFolder = async()=>{
-    if(!folderName){
+  const handleCreateFolder = async () => {
+    if (!folderName) {
       toast.error("Folder Name required");
-      setfolderName("");
-      return ;
+      setFolderName("");
+      return;
     }
-    //get current folder id (for now lets say we creating in root (null))
-    try{
+    try {
       const res = await createFolder({
-        name:folderName,
-        parentFolder:currentFolderId
-      })
-      if(res.data.success){
-        toast.success("Folder Created")
+        name: folderName,
+        parentFolder: currentFolderId
+      });
+      if (res.data.success) {
+        toast.success("Folder Created");
       }
-    }catch(err){
+    } catch (err) {
       console.log(err);
     }
-      setfolderName("");
+    setFolderName("");
+  };
 
+  const handleLogout = async()=>{
+    try{
+      const res = await logoutUser();
+      if(res?.data?.success){
+        router.push('/');
+      }
+    }
+    catch(err){
+      toast.error("Failed to Logout!")
+    }
   }
 
   return (
     <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
       <aside
         className={`
-          fixed top-0 left-0 z-30 h-screen bg-white shadow-lg
-          transition-all duration-300 ease-in-out
-          flex flex-col p-4 border-r
+          fixed top-0 left-0 z-30 h-screen bg-sidebar text-sidebar-foreground
+          shadow-lg transition-all duration-300 ease-in-out flex flex-col p-4 border-r border-sidebar-border
           ${isCollapsed ? 'w-19' : 'w-64'}
         `}
         onMouseEnter={handleMouseEnter}
@@ -102,9 +113,9 @@ const SidebarMenu = () => {
             <DropdownMenuTrigger asChild>
               <Button
                 className={`
-                  flex items-center bg-blue-600 text-white rounded-full shadow-md
-                  hover:bg-blue-700 transition-colors duration-200
-                  focus:outline-none focus:ring-2 focus:ring-blue-500
+                  flex items-center bg-primary text-primary-foreground rounded-full shadow-md
+                  hover:bg-primary/90 transition-colors duration-200
+                  focus:outline-none focus:ring-2 focus:ring-ring
                   ${isCollapsed ? 'w-12 h-12 justify-center' : 'px-5 py-3'}
                 `}
               >
@@ -113,13 +124,13 @@ const SidebarMenu = () => {
               </Button>
             </DropdownMenuTrigger>
 
-            <DropdownMenuContent side="right" className="w-52 mt-10 -ml-4">
+            <DropdownMenuContent side="right" className="w-52 mt-10 -ml-4 bg-popover text-popover-foreground border border-border">
               <DropdownMenuLabel>Quick Actions</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onSelect={() => {
                   setDrawerOpen(true);
-                  setDropdownOpen(false); // Optionally close dropdown
+                  setDropdownOpen(false);
                 }}
                 className="cursor-pointer"
               >
@@ -134,32 +145,53 @@ const SidebarMenu = () => {
 
         {/* Navigation */}
         <nav className="flex-grow">
-          <ul className="space-y-2">
-            {navItems.map((item) => (
-              <li key={item.label}>
-                <Link
-                  href="#"
-                  className={`flex items-center p-3 rounded-lg transition-all duration-200 hover:bg-gray-100 text-gray-700 ${
-                    item.label === 'My Drive'
-                      ? 'bg-blue-50 text-blue-700 font-semibold'
-                      : ''
-                  }`}
-                >
-                  {item.icon}
-                  {!isCollapsed && (
-                    <span className="ml-3 whitespace-nowrap transition-opacity duration-200">
-                      {item.label}
-                    </span>
-                  )}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
+  <ul className="space-y-2">
+    {navItems.map((item) =>
+      item.label === "Signout" ? (
+        <li key={item.label}>
+          <button
+            onClick={handleLogout}
+            className={` hover:cursor-pointer flex items-center w-full text-left p-3 rounded-lg transition-all duration-200 hover:bg-muted text-muted-foreground ${
+              item.label === 'My Drive'
+                ? 'bg-secondary text-secondary-foreground font-semibold'
+                : ''
+            }`}
+          >
+            {item.icon}
+            {!isCollapsed && (
+              <span className="ml-3 whitespace-nowrap transition-opacity duration-200">
+                {item.label}
+              </span>
+            )}
+          </button>
+        </li>
+      ) : (
+        <li key={item.label}>
+          <Link
+            href="#"
+            className={`flex items-center p-3 rounded-lg transition-all duration-200 hover:bg-muted text-muted-foreground ${
+              item.label === 'My Drive'
+                ? 'bg-secondary text-secondary-foreground font-semibold'
+                : ''
+            }`}
+          >
+            {item.icon}
+            {!isCollapsed && (
+              <span className="ml-3 whitespace-nowrap transition-opacity duration-200">
+                {item.label}
+              </span>
+            )}
+          </Link>
+        </li>
+      )
+    )}
+  </ul>
+</nav>
+
       </aside>
 
       {/* Drawer UI */}
-      <DrawerContent side="right">
+      <DrawerContent side="right" className="bg-background text-foreground border-l border-border">
         <DrawerHeader>
           <DrawerTitle>Create New Folder</DrawerTitle>
           <DrawerDescription>Organize your files in a new folder</DrawerDescription>
@@ -167,9 +199,9 @@ const SidebarMenu = () => {
         <div className="p-4">
           <input
             type="text"
-            onChange={(e)=>setfolderName(e.target.value)}
+            onChange={(e) => setFolderName(e.target.value)}
             placeholder="Folder Name"
-            className="w-full border px-3 py-2 rounded"
+            className="w-full border border-border px-3 py-2 rounded bg-input text-foreground"
           />
         </div>
         <DrawerFooter>

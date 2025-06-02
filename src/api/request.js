@@ -1,14 +1,15 @@
 import api from "./interceptor";
 
 //user requests
-// export const login = async(data)=>{
-//     return api.post(`/api/v1/user/login`, data)
-// }
+
 export const login = async(data)=>{
     return api.post(`/api/v1/user/login`, data)
 }
 export const registerUser = async (data) => {
   return api.post(`/api/v1/user/register`, data)
+}
+export const logoutUser = async()=>{
+  return api.post('/api/v1/user/logout');
 }
 
 //folder requests
