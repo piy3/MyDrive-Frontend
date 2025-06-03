@@ -22,3 +22,6 @@ export const getFolders = async (id) => {
 export const createFolder = async (data) => {
   return api.post('/api/v1/folder/createFolder',data)
 }
+export const renameFolder = async(data)=>{
+  return api.put('/api/v1/folder/updateFolder',data)
+}

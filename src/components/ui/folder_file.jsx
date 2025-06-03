@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -8,53 +8,80 @@ import {
   Share2,
   Download,
   Trash2,
+  TextCursor,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import toast from "react-hot-toast";
 import { getFolders } from "@/api/request";
 import File_Info from "@/components/ui/file_info";
+import { useGlobalStore } from "@/store/useGlobalStore";
+import Rename from "@/components/ui/rename";
 
-const useGlobalStore = (selector) => {
-  const [currentFolderId, _setCurrentFolderId] = useState(null);
-  const setCurrentFolderId = (id) => {
-    console.log("Setting current folder ID:", id);
-    _setCurrentFolderId(id);
-  };
-  return selector({ currentFolderId, setCurrentFolderId });
-};
+// const useGlobalStore = (selector) => {
+//   const [currentFolderId, _setCurrentFolderId] = useState(null);
+//   const setCurrentFolderId = (id) => {
+//     console.log("Setting current folder ID:", id);
+//     _setCurrentFolderId(id);
+//   };
+//   return selector({ currentFolderId, setCurrentFolderId });
+// };
 
 function Folders_files({ parentFolderId }) {
-  const [folders, setFolders] = useState([]);
+  // const [folders, setFolders] = useState([]);
   const [openDropdownId, setOpenDropdownId] = useState(null);
   const [fileInfoData, setFileInfoData] = useState(null);
   const dropdownRefs = useRef({});
   const hasFetched = useRef(false);
   const param = usePathname();
-  const setCurrentFolderId = useGlobalStore((state) => state.setCurrentFolderId);
+  const setCurrentFolderId = useGlobalStore(
+    (state) => state.setCurrentFolderId
+  );
+  const foldersMap = useGlobalStore((state) => state.foldersMap);
+  const setFoldersForParent = useGlobalStore(
+    (state) => state.setFoldersForParent
+  );
+  const folders = foldersMap[parentFolderId] || [];
 
-  const get_currDirc_Folders = async () => {
-    try {
-      const res = await getFolders(parentFolderId);
-      if (res?.data?.success) {
-        setFolders(res.data.folders);
-      }
-    } catch (err) {
-      toast.error(err.response?.message || err.message || "Failed to fetch folders.");
-    }
-  };
+  // const get_currDirc_Folders = async () => {
+  //   try {
+  //     const res = await getFolders(parentFolderId);
+  //     if (res?.data?.success) {
+  //       setFolders(res.data.folders);
+  //       setFolders((prev)=>[...prev,...newFolders]);
+  //     }
+  //     else{
+  //       toast.error(res?.data?.message);
+  //     }
+  //   } catch (err) {
+  //     toast.error(err.response?.message || err.message || "Failed to fetch folders.");
+  //   }
+  // };
 
   useEffect(() => {
     setCurrentFolderId(parentFolderId);
-    if (!hasFetched.current) {
-      hasFetched.current = true;
-      get_currDirc_Folders();
+    if (!folders.length) {
+      // Only fetch if no data exists for this folder
+      (async () => {
+        try {
+          const res = await getFolders(parentFolderId);
+          if (res?.data?.success) {
+            setFoldersForParent(parentFolderId, res.data.folders);
+          }
+        } catch (err) {
+          toast.error("Failed to fetch folders");
+        }
+      })();
     }
-  }, [parentFolderId, setCurrentFolderId]);
+  }, [parentFolderId]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (openDropdownId && dropdownRefs.current[openDropdownId] && !dropdownRefs.current[openDropdownId].contains(event.target)) {
+      if (
+        openDropdownId &&
+        dropdownRefs.current[openDropdownId] &&
+        !dropdownRefs.current[openDropdownId].contains(event.target)
+      ) {
         setOpenDropdownId(null);
       }
     };
@@ -70,11 +97,21 @@ function Folders_files({ parentFolderId }) {
     setOpenDropdownId(openDropdownId === folderId ? null : folderId);
   };
 
+  const [renameDrawer, setRenameDrawer] = useState({
+    open: false,
+    folder: null,
+  });
+
   const handleOptionClick = (option, folder) => {
-    if (option === "File info") {
-      setFileInfoData(folder);
-    } else {
-      toast.success(`${option} for ${folder.name}`);
+    switch (option) {
+      case "File info":
+        setFileInfoData(folder);
+        break;
+      case "Rename":
+        setRenameDrawer({ open: true, folder });
+        break;
+      default:
+        toast.success(`${option} for ${folder.name}`);
     }
     setOpenDropdownId(null);
   };
@@ -118,6 +155,12 @@ function Folders_files({ parentFolderId }) {
                     <Info className="w-4 h-4 mr-2" /> Info
                   </button>
                   <button
+                    onClick={() => handleOptionClick("Rename", folder)}
+                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  >
+                    <TextCursor className="w-4 h-4 mr-2" /> Rename
+                  </button>
+                  <button
                     onClick={() => handleOptionClick("Shared with", folder)}
                     className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
                   >
@@ -141,7 +184,17 @@ function Folders_files({ parentFolderId }) {
           </div>
         ))}
       </div>
-      {fileInfoData && <File_Info folder={fileInfoData} onClose={() => setFileInfoData(null)} />}
+      {fileInfoData && (
+        <File_Info
+          folder={fileInfoData}
+          onClose={() => setFileInfoData(null)}
+        />
+      )}
+      <Rename
+        open={renameDrawer.open}
+        onClose={() => setRenameDrawer({ open: false, folder: null })}
+        folder={renameDrawer.folder}
+      />
     </>
   );
 }

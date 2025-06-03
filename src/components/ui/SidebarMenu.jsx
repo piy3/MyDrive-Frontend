@@ -53,7 +53,8 @@ const SidebarMenu = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [folderName, setFolderName] = useState("");
-  const currentFolderId = useGlobalStore((store) => store.currentFolderId);
+  // const currentFolderId = useGlobalStore((store) => store.currentFolderId);
+  // const setnewFolders = useGlobalStore((store)=>store.setnewFolders);
   const router  = useRouter();
 
   const handleMouseEnter = () => {
@@ -64,30 +65,33 @@ const SidebarMenu = () => {
     if (!dropdownOpen) setIsCollapsed(true);
   };
 
-  const handleCreateFolder = async () => {
-    if (!folderName) {
-      toast.error("Folder Name required");
-      setFolderName("");
-      return;
+  const currentFolderId = useGlobalStore((state) => state.currentFolderId);
+const addFolderToParent = useGlobalStore((state) => state.addFolderToParent);
+
+const handleCreateFolder = async () => {
+  if (!folderName) {
+    toast.error("Folder name required");
+    return;
+  }
+
+  try {
+    const res = await createFolder({ name: folderName, parentFolder: currentFolderId });
+    if (res.data.success) {
+      toast.success("Folder Created");
+      addFolderToParent(currentFolderId, res.data.folder); // ✅ Add folder without refetching
     }
-    try {
-      const res = await createFolder({
-        name: folderName,
-        parentFolder: currentFolderId
-      });
-      if (res.data.success) {
-        toast.success("Folder Created");
-      }
-    } catch (err) {
-      console.log(err);
-    }
-    setFolderName("");
-  };
+  } catch (err) {
+    toast.error("Failed to create folder");
+  }
+
+  setFolderName("");
+};
 
   const handleLogout = async()=>{
     try{
       const res = await logoutUser();
       if(res?.data?.success){
+        toast.success("See you soon!")
         router.push('/');
       }
     }
